@@ -2,8 +2,8 @@
   <div id="app" class="columns">
     <div class="column">
       <div class="customer">
-        <input class="input is-small" placeholder="Filter customers by name" v-model="searchString"/>
-        <a class="level-item" v-on:click="sortAsc = !sortAsc">
+        <input class="input is-small" placeholder="Filter customers by name" v-model="searchString" v-on:keyup="sort()"/>
+        <a class="level-item" v-on:click="sortAsc = !sortAsc; sort()">
           <i class="fa fa-arrow-up" v-if="sortAsc" aria-hidden="true"></i>
           <i class="fa fa-arrow-down" v-if="!sortAsc" aria-hidden="true"></i>
         </a>
@@ -14,6 +14,7 @@
 </template>
 
 <script>
+const axios = require('axios');
 
 const sortByName = function(a, b) {
   var nameA = a.name.toUpperCase();
@@ -30,11 +31,25 @@ const sortByName = function(a, b) {
 export default {
   name: 'app',
   computed: {
-    filteredCustomers: function() {
+  },
+  mounted () {
+    axios
+      .get('http://localhost:8090/customers')
+      .then(response => {
+        this.customers = response.data;
+        if (this.$data.sortAsc) {
+          this.filteredCustomers =  this.customers.filter(customer => customer.name.includes(this.$data.searchString)).sort(sortByName)
+        } else {
+          this.filteredCustomers =  this.customers.filter(customer => customer.name.includes(this.$data.searchString)).sort(sortByName).reverse()
+        }
+      })
+  },
+  methods: {
+    sort: function() {
       if (this.$data.sortAsc) {
-        return this.customers.filter(customer => customer.name.includes(this.$data.searchString)).sort(sortByName)
+        this.filteredCustomers =  this.customers.filter(customer => customer.name.includes(this.$data.searchString)).sort(sortByName)
       } else {
-        return this.customers.filter(customer => customer.name.includes(this.$data.searchString)).sort(sortByName).reverse()
+        this.filteredCustomers =  this.customers.filter(customer => customer.name.includes(this.$data.searchString)).sort(sortByName).reverse()
       }
     }
   },
@@ -42,46 +57,7 @@ export default {
     return {
       sortAsc: true,
       searchString: "",
-      customers: [
-          {
-              "id": "ee76d2b9-cdda-49c5-83ae-a3ff2a57aa91",
-              "status": "PROSPECTIVE",
-              "created": 1539386888983,
-              "name": "foooo",
-              "details": "65-65-65",
-              "notes": [
-                {
-                  "id": "ee76d2b9-cdda-49c5-13ae-a3ff2a57aa91",
-                  "content": "blah-blah"
-                }
-              ]
-          },
-          {
-              "id": "ee76d2b9-cdda-49c5-83ae-a3ff2a57aa92",
-              "status": "CURRENT",
-              "created": 1539386888983,
-              "name": "barrrrr",
-              "details": "65-65-65",
-              "notes": [
-                {
-                  "id": "ee76d2b9-cdda-49c5-145e-a3df2a57aa91",
-                  "content": "blah-blah"
-                },
-                {
-                  "id": "ee76d2b9-cdda-49c5-13ae-a3ff2a57aa99",
-                  "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed rutrum dictum eros, nec ornare orci iaculis at. Vestibulum hendrerit velit id felis laoreet ullamcorper. Aenean iaculis imperdiet risus non iaculis. Curabitur eu blandit diam, in imperdiet amet."
-                }
-              ]
-          },
-          {
-              "id": "ee76d2b9-cdda-49c5-83ae-a3ff2a57aa93",
-              "status": "NON_ACTIVE",
-              "created": 1539386888983,
-              "name": "fizzz",
-              "details": "65-65-65",
-              "notes": []
-          }
-        ]
+      filteredCustomers: []
     }
   }
 }
